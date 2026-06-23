@@ -4,6 +4,24 @@ const app = express();
 app.use(express.json());
 //POST = Create a note
 const notes =[];
+const users=[];
+app.post("/signup",function(req,res){
+    const username = req.body.username;
+    const password = req.body.password;
+    const userExist= users.find(user => user.usernmae === username)
+    if(userExist){
+        return res.status(403).json({
+           message : "User with this name already exist "
+        })
+    }
+    user.push({
+        username: username,
+        password: password
+    })
+    res.json({
+        message: "You have signed up "
+    })
+})
 app.post("/notes",function (req,res){
     const note = req.body.note;
     notes.push(note);
