@@ -34,9 +34,17 @@
         //we have clicked the create new note and then this has been 
         //sent to the 
        async function  addTodo(){
-       await  axios.post("http://localhost:3000/notes",{
-              note: document.getElementById("userNote").value
-        })
+       await axios.post(
+    "http://localhost:3000/notes",
+    {
+        note: document.getElementById("userNote").value
+    },
+    {
+        headers: {
+            token: localStorage.getItem("token")
+        }
+    }
+);
        
         //show the todo in the frontend 
           const noteNode = 
@@ -70,7 +78,7 @@
                 const noteNode =
                     document.createElement("div");
 
-                noteNode.innerHTML = notes[i];
+                noteNode.innerHTML = notes[i].note;
 
                 noteNode.style.padding = "12px";
                noteNode.style.marginBottom = "10px";
