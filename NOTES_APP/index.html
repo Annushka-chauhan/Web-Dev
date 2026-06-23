@@ -1,0 +1,89 @@
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+    <div
+        style="
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+            padding: 20px 100px;
+            box-sizing: border-box;
+        "
+    >
+        <!-- Notes Section -->
+        <div id="notes">
+            Loading...
+        </div>
+
+        <!-- Input Section -->
+        <div style="display: flex; gap: 10px;">
+            <input
+                type="text"
+                id="userNote"
+                placeholder="Enter a note"
+            />
+            <button onClick="addTodo()">Create New Note</button>
+        </div>
+    </div>
+
+    <script>
+        //we have clicked the create new note and then this has been 
+        //sent to the 
+       async function  addTodo(){
+       await  axios.post("http://localhost:3000/notes",{
+              note: document.getElementById("userNote").value
+        })
+       
+        //show the todo in the frontend 
+          const noteNode = 
+                    document.createElement("div");
+
+                noteNode.innerHTML =document.getElementById("userNote").value
+
+                document
+                    .getElementById("notes")
+                    .appendChild(noteNode);
+                    //make the input box emppty 
+                  document.getElementById("userNote").value=""   
+       }
+       
+
+
+
+        async function getTodos() {
+            const response = await axios.get(
+                "http://localhost:3000/notes"
+            );
+
+            const notes = response.data.notes;
+
+            document.getElementById("notes").innerHTML = "";
+
+            for (let i = 0; i < notes.length; i++) {
+                const noteNode =
+                    document.createElement("div");
+
+                noteNode.innerHTML = notes[i];
+
+                noteNode.style.padding = "12px";
+               noteNode.style.marginBottom = "10px";
+               noteNode.style.borderRadius = "8px";
+              noteNode.style.backgroundColor = "#f8f9fa";
+              noteNode.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+              noteNode.style.fontSize = "16px";
+
+
+                document
+                    .getElementById("notes")
+                    .appendChild(noteNode);
+            }
+        }
+
+        getTodos();
+    </script>
+</body>
+</html>
