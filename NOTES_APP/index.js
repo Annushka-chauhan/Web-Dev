@@ -36,6 +36,7 @@ app.post("/signin", function(req,res){
         return;
     }
     //json web token 
+    //converting the username using the password into the token name 
    const token = jwt.sign({
     username: username
    },"Annu123")
@@ -49,8 +50,28 @@ app.post("/signin", function(req,res){
 
 
 app.post("/notes",function (req,res){
+    //check if they have sent the right header, extract who this user is from the header 
+     const token = req.headers.token;
+     if(!token){
+        res.status(403).send({
+            message: "You are not logged in "
+        })
+        return;
+    }
+
+        //converting the token name into the original username so that the data of that username 
+        //can be visible 
+        const decoded = jwt.verify(token, "Annu123")
+        const username = decoded.username;
+
+        if(!username){
+            res.status(403).json({
+                message: "malformed token"
+            })
+            return;
+        }
     const note = req.body.note;
-    notes.push(note);
+    notes.push({note,username});
     res.json({
         message: "Done!"
     })
