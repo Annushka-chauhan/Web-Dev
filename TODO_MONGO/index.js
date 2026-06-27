@@ -1,24 +1,20 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const { userModel, todoModel } = require("./Models");
 const { authMiddleWare } = require("./middleware");
 
 const app = express();
+
 app.use(express.json());
 
-let CURRENT_USER_ID = 1;
-let CURRENT_TODO_ID = 1;
-
-const USERS = [];
-const TODOS = [];
-
 // Signup
-app.post("/signup", (req, res) => {
+app.post("/signup", async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
 
-    const existingUser = USERS.find(
-        u => u.username === username
-    );
+    const existingUser = await userModel.findOne({
+        username: username
+    });
 
     if (existingUser) {
         return res.status(403).json({
@@ -26,26 +22,25 @@ app.post("/signup", (req, res) => {
         });
     }
 
-    USERS.push({
-        id: CURRENT_USER_ID++,
+    const newUser = await userModel.create({
         username,
         password
     });
 
     res.json({
-        message: "User created successfully",
-        id: CURRENT_USER_ID - 1
+        id: newUser._id
     });
 });
 
 // Signin
-app.post("/signin", (req, res) => {
+app.post("/signin", async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
 
-    const userExist = USERS.find(
-        u => u.username === username && u.password === password
-    );
+    const userExist = await userModel.findOne({
+        username,
+        password
+    });
 
     if (!userExist) {
         return res.status(403).json({
@@ -55,7 +50,7 @@ app.post("/signin", (req, res) => {
 
     const token = jwt.sign(
         {
-            userId: userExist.id
+            userId: userExist._id
         },
         "secret123123"
     );
@@ -66,13 +61,12 @@ app.post("/signin", (req, res) => {
 });
 
 // Create Todo
-app.post("/todo", authMiddleWare, (req, res) => {
+app.post("/todo", authMiddleWare, async (req, res) => {
     const userId = req.userId;
     const title = req.body.title;
     const description = req.body.description;
 
-    TODOS.push({
-        id: CURRENT_TODO_ID++,
+    const todo = await todoModel.create({
         title,
         description,
         userId
@@ -80,41 +74,45 @@ app.post("/todo", authMiddleWare, (req, res) => {
 
     res.json({
         message: "Todo created successfully",
-        todoId: CURRENT_TODO_ID - 1
+        todoId: todo._id
     });
 });
 
-
-app.delete("/todo/:todoId", authMiddleware, (req, res) => {
+// Delete Todo
+app.delete("/todo/:todoId", authMiddleWare, async (req, res) => {
     const userId = req.userId;
-    const todoId = Number(req.params.todoId);
+    const todoId = req.params.todoId;
 
-    const doesUserOwnTodo = TODOS.find(
-        t => t.id === todoId && t.userId === userId
-    );
+    const todo = await todoModel.findOne({
+        _id: todoId,
+        userId: userId
+    });
 
-    if (doesUserOwnTodo) {
-        TODOS = TODOS.filter(t => t.id !== todoId);
-
-        res.json({
-            message: "Deleted"
-        });
-    } else {
-        res.status(411).json({
+    if (!todo) {
+        return res.status(403).json({
             message: "Either todo doesn't exist or this is not your todo"
         });
     }
-});
-// Get Todos
-app.get("/todos", authMiddleWare, (req, res) => {
-    const userId = req.userId;
 
-    const userTodos = TODOS.filter(
-        todo => todo.userId === userId
-    );
+    await todoModel.deleteOne({
+        _id: todoId
+    });
 
     res.json({
-        todos: userTodos
+        message: "Deleted"
+    });
+});
+
+// Get Todos
+app.get("/todos", authMiddleWare, async (req, res) => {
+    const userId = req.userId;
+
+    const todos = await todoModel.find({
+        userId: userId
+    });
+
+    res.json({
+        todos
     });
 });
 
