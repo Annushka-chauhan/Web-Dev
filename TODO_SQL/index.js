@@ -1,16 +1,43 @@
 const express = require("express");
 const { Pool } =require("pg")
 const bcrypt = require("becrypt")
+const z= require("zod")
 const pool = new Pool({
     connectionString:"postgresql://neondb_owner:npg_Gxu2sBg7SplD@ep-morning-firefly-athe0uvf-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 })
 
 const app = express();
 app.use(express.json())
+const SignupSchema=  z.object({
+    username: z.string().min(3),
+    password: z.string().min(6),
+    email: z.email()//is this an valid email 
+})
 app.post("/signup",async (req,res)=>{
-   const  username = req.body.username;
-   const email = req.body.email;
-   const password = req.body.password;
+    const {data,success} = SignupSchema.safeParse(req.body);
+    if(!success){
+       res.status(403).json({
+        message: "Incorrect Inputs"
+       })
+       return 
+    }
+   const  username = data.username;
+   const email = data.email;
+   const password = data.password;
+   
+
+
+//One way to do the input validation ie manual testing for each field
+//    if(typeof username !== "string"){
+//     res.status(403).json({
+//         message: "Input incorrect"
+//     })
+//     return 
+//    }
+
+
+
+
    //const hashedPassword = hash(password);
    const hashedPassword = await becrypt.hash(password,10)
    //Never store password in plane text store the password in hashed format so that no other can
