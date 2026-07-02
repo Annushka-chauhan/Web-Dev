@@ -8,16 +8,19 @@ const pool = new Pool({
 
 const app = express();
 app.use(express.json())
+//zod lets us describe the schema of your input to the backend and then validate things 
+//used majorly in open ai where llm need to return the data in the same format 
+
 const SignupSchema=  z.object({
     username: z.string().min(3),
     password: z.string().min(6),
     email: z.email()//is this an valid email 
 })
 app.post("/signup",async (req,res)=>{
-    const {data,success} = SignupSchema.safeParse(req.body);
+    const {data,success,error} = SignupSchema.safeParse(req.body);
     if(!success){
        res.status(403).json({
-        message: "Incorrect Inputs"
+        message: "Incorrect Inputs",error:JSON.parse(error)
        })
        return 
     }
